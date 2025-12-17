@@ -100,80 +100,32 @@ const Scene = () => {
                 subLabel="Sends Gift" 
             />
             
-            {/* Middle Pipeline - Factory Hub */}
-            <group position={[0, -2, 0]}>
-                 {/* Main Factory Building */}
-                 <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
-                     <boxGeometry args={[1.5, 1, 1.2]} />
-                     <meshStandardMaterial color="#EFF6FF" roughness={0.2} metalness={0.1} />
-                 </mesh>
-                 
-                 {/* Roof Details */}
-                 <mesh position={[-0.4, 1.1, 0]} rotation={[0, 0, Math.PI/4]}>
-                     <boxGeometry args={[0.5, 0.5, 1.2]} />
-                     <meshStandardMaterial color="#DBEAFE" />
-                 </mesh>
-                 <mesh position={[0.4, 1.1, 0]} rotation={[0, 0, Math.PI/4]}>
-                     <boxGeometry args={[0.5, 0.5, 1.2]} />
-                     <meshStandardMaterial color="#DBEAFE" />
-                 </mesh>
-
-                 {/* Smokestack */}
-                 <mesh position={[0.5, 1.3, 0.3]}>
-                     <cylinderGeometry args={[0.15, 0.15, 1, 16]} />
-                     <meshStandardMaterial color="#CBD5E1" />
-                 </mesh>
-                 {/* Smoke Particles Hint */}
-                 <mesh position={[0.5, 2, 0.3]}>
-                      <sphereGeometry args={[0.15, 8, 8]} />
-                      <meshStandardMaterial color="white" transparent opacity={0.5} />
-                 </mesh>
-                 
-                 {/* Factory Door/Entrance */}
-                 <mesh position={[0, 0.2, 0.61]}>
-                     <planeGeometry args={[0.5, 0.6]} />
-                     <meshStandardMaterial color="#1E293B" />
-                 </mesh>
-
-                 {/* Logo on Wall */}
-                 <Text
-                    position={[0, 0.5, 0.61]}
-                    fontSize={0.2}
-                    color="#3B82F6"
-                    anchorX="center"
-                    anchorY="middle"
-                    font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff"
-                 >
-                    Giftify
-                 </Text>
-                 
-                 {/* "Hub" Text Label below */}
-                 <Html position={[0, -0.8, 0]} center>
-                    <div style={{ textAlign: 'center', pointerEvents: 'none' }}>
-                       <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1E293B' }}>Secure Hub</div>
-                       <div style={{ fontSize: '10px', color: '#64748B' }}>Address Encrypted</div>
-                    </div>
-                 </Html>
-
-                {/* Secure Tag Floating Above Hub */}
-                <Html position={[0, 2.8, 0]} center>
-                    <div style={{ 
-                        background: 'white', 
-                        padding: '6px 12px', 
-                        borderRadius: '8px', 
-                        fontSize: '12px', 
-                        fontWeight: 'bold', 
-                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)', 
-                        whiteSpace: 'nowrap', 
-                        textAlign: 'center',
-                        border: '1px solid #E2E8F0',
-                        animation: 'float 3s ease-in-out infinite'
-                    }}>
-                        <div style={{ color: '#0F172A' }}>Address Hidden</div>
-                        <div style={{ fontSize: '10px', color: '#10B981', marginTop: 2 }}>Secure Tag: #GH-99</div>
-                    </div>
-                </Html>
-            </group>
+            {/* Middle Pipeline */}
+            <LocationNode 
+                position={[0, -2, 0]} 
+                icon="☁️" 
+                label="Giftify Secure Hub" 
+                subLabel="Address Encrypted" 
+            />
+            
+            {/* Secure Tag Floating Above Hub */}
+            <Html position={[0, 0.5, 0]} center>
+                <div style={{ 
+                    background: 'white', 
+                    padding: '6px 12px', 
+                    borderRadius: '8px', 
+                    fontSize: '12px', 
+                    fontWeight: 'bold', 
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)', 
+                    whiteSpace: 'nowrap', 
+                    textAlign: 'center',
+                    border: '1px solid #E2E8F0',
+                    animation: 'float 3s ease-in-out infinite'
+                }}>
+                    <div style={{ color: '#0F172A' }}>Address Hidden</div>
+                    <div style={{ fontSize: '10px', color: '#10B981', marginTop: 2 }}>Secure Tag: #GH-99</div>
+                </div>
+            </Html>
             
             {/* Receiver / Creator */}
             <LocationNode 
