@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import Cursor from './Cursor'
 import Flow3D from './Flow3D'
+import Magnetic from './Magnetic'
 
 const AnimationSection = ({ children, className }) => {
   return (
@@ -27,7 +28,9 @@ const ModernLanding = () => {
       
       {/* Navigation */}
       <nav className="glass-nav interactive" style={{ background: 'rgba(255,255,255,0.85)' }}>
-        <div className="logo">Giftify.</div>
+        <Magnetic>
+            <div className="logo interactive" style={{ cursor: 'pointer' }}>Giftify.</div>
+        </Magnetic>
         <div className="nav-links">
             <button className="nav-item interactive">For Creators</button>
             <button className="nav-item interactive">For Fans</button>
