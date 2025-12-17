@@ -42,14 +42,6 @@ const GiftBox = ({ position, onClick, isSelected }) => {
           <meshStandardMaterial color="#fff" />
         </mesh>
       </Float>
-      
-      {/* Label */}
-      <Html position={[0, -1.5, 0]} center transform>
-         <div style={{ background: 'white', padding: '4px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', whiteSpace: 'nowrap', textAlign: 'center' }}>
-            {isSelected ? "Address Hidden" : "Gift Package"}
-            {isSelected && <div style={{ fontSize: '9px', color: '#10B981', marginTop: 2 }}>Secure Tag: #GH-99</div>}
-         </div>
-      </Html>
     </group>
   )
 }
@@ -115,6 +107,25 @@ const Scene = () => {
                 label="Giftify Secure Hub" 
                 subLabel="Address Encrypted" 
             />
+            
+            {/* Secure Tag Floating Above Hub */}
+            <Html position={[0, 0.5, 0]} center>
+                <div style={{ 
+                    background: 'white', 
+                    padding: '6px 12px', 
+                    borderRadius: '8px', 
+                    fontSize: '12px', 
+                    fontWeight: 'bold', 
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)', 
+                    whiteSpace: 'nowrap', 
+                    textAlign: 'center',
+                    border: '1px solid #E2E8F0',
+                    animation: 'float 3s ease-in-out infinite'
+                }}>
+                    <div style={{ color: '#0F172A' }}>Address Hidden</div>
+                    <div style={{ fontSize: '10px', color: '#10B981', marginTop: 2 }}>Secure Tag: #GH-99</div>
+                </div>
+            </Html>
             
             {/* Receiver / Creator */}
             <LocationNode 
