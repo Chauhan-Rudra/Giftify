@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import Cursor from './Cursor'
 import Flow3D from './Flow3D'
+import FlowDiagram from './FlowDiagram'
 import Magnetic from './Magnetic'
 
 const AnimationSection = ({ children, className }) => {
@@ -214,19 +215,28 @@ const ModernLanding = () => {
       </section>
 
       {/* How It Works Flow */}
-      <section className="flow-section">
+      <section className="flow-section" style={{ paddingBottom: '10rem' }}>
         <AnimationSection className="text-center">
             <h2 className="section-title">The Secure Gift Flow</h2>
             <p className="section-desc">See how we protect your information every step of the way.</p>
         </AnimationSection>
         
-        <AnimationSection className="interactive">
+        {/* 3D Visualization */}
+        <AnimationSection className="interactive" style={{ marginBottom: '4rem' }}>
             <div style={{ maxWidth: '1000px', margin: '0 auto', boxShadow: 'var(--shadow-lg)', borderRadius: '24px' }}>
                 <Flow3D />
             </div>
         </AnimationSection>
 
-        {/* Timeline removed to reduce clutter - 3D scene explains it all */}
+        {/* Block Diagram / Explanation */}
+        <AnimationSection className="interactive">
+             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Process Breakdown</h3>
+             </div>
+            <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+                <FlowDiagram />
+            </div>
+        </AnimationSection>
       </section>
 
       {/* Premium Footer */}
