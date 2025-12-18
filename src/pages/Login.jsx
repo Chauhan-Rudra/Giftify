@@ -11,6 +11,42 @@ const Login = () => {
     const { addToast } = useToast();
     const [loading, setLoading] = useState(false);
 
+    const [email, setEmail] = useState('');
+    const [detectedRole, setDetectedRole] = useState(null);
+    
+    // Real-time role check
+    React.useEffect(() => {
+        const checkRole = async () => {
+            if (!email.includes('@') || email.length < 5) {
+                setDetectedRole(null);
+                return;
+            }
+
+            try {
+                const { collection, query, where, getDocs } = await import('firebase/firestore');
+                const { db } = await import('../firebase');
+                
+                // Use a short timeout to prevent hanging if network is blocked
+                const q = query(collection(db, "users"), where("email", "==", email));
+                const fetchPromise = getDocs(q);
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500));
+                
+                const snapshot = await Promise.race([fetchPromise, timeoutPromise]);
+                
+                if (!snapshot.empty) {
+                    setDetectedRole(snapshot.docs[0].data().role);
+                } else {
+                    setDetectedRole(null);
+                }
+            } catch (err) {
+                // Silent fail for UX
+            }
+        };
+
+        const timer = setTimeout(checkRole, 800);
+        return () => clearTimeout(timer);
+    }, [email]);
+
     const handleLogin = async (e) => {
         e.preventDefault();
         if (loading) return;
@@ -53,18 +89,21 @@ const Login = () => {
                 // If auth worked but DB timed out, fallback to limited mode
                 console.warn("Firestore timed out, falling back to limited mode");
                 
+                // Try to use detected role if available, otherwise default
+                const fallbackRole = detectedRole || 'fan';
+                
                 const limitedUser = {
                     uid: user.uid,
                     email: user.email,
                     firstName: 'User',
                     lastName: '',
-                    role: 'fan', // Default fallback
+                    role: fallbackRole,
                     isLimitedMode: true
                 };
                 
                 localStorage.setItem('user', JSON.stringify(limitedUser));
                 addToast("Network restrictions detected. Entering Limited Mode.", 'info');
-                setLocation('/dashboard/fan');
+                setLocation(fallbackRole === 'creator' ? '/dashboard/creator' : '/dashboard/fan');
                 return;
             }
 
@@ -130,7 +169,37 @@ const Login = () => {
                     <form style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} onSubmit={handleLogin}>
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.9rem' }}>Email</label>
-                            <input type="email" name="email" placeholder="you@example.com" className="newsletter-input" required />
+                            <input 
+                                type="email" 
+                                name="email" 
+                                placeholder="you@example.com" 
+                                className="newsletter-input" 
+                                required 
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                            {detectedRole && (
+                                <motion.div 
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    style={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: '6px', 
+                                        marginTop: '8px', 
+                                        fontSize: '0.85rem',
+                                        color: detectedRole === 'creator' ? '#16A34A' : '#2563EB',
+                                        fontWeight: 600,
+                                        background: detectedRole === 'creator' ? '#DCFCE7' : '#EFF6FF',
+                                        padding: '4px 8px',
+                                        borderRadius: '6px',
+                                        width: 'fit-content'
+                                    }}
+                                >
+                                    <span>{detectedRole === 'creator' ? '🦁' : '🦄'}</span>
+                                    {detectedRole === 'creator' ? 'Creator Account Detected' : 'Fan Account Detected'}
+                                </motion.div>
+                            )}
                         </div>
 
                         <div>
