@@ -28,9 +28,16 @@ const Login = () => {
             const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
             const user = userCredential.user;
 
-            // 2. Fetch User Role from Firestore
+            // 2. Fetch User Role from Firestore with Timeout
             const docRef = doc(db, "users", user.uid);
-            const docSnap = await getDoc(docRef);
+            
+            // Create a race between fetch and timeout
+            const fetchPromise = getDoc(docRef);
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("Request timed out - Please check your network or adblocker")), 10000)
+            );
+
+            const docSnap = await Promise.race([fetchPromise, timeoutPromise]);
 
             if (docSnap.exists()) {
                 const userData = docSnap.data();
@@ -50,8 +57,7 @@ const Login = () => {
                     setLocation('/dashboard/fan');
                 }
             } else {
-                addToast("User profile not found. Please contact support.", 'error');
-                setLoading(false);
+                throw new Error("Profile not found in database.");
             }
 
         } catch (err) {
