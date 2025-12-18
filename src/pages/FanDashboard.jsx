@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import { Search, Filter, Star, Gift } from 'lucide-react'
+import { useToast } from '../components/ToastContext'
 
 const FanDashboard = () => {
   const categories = ['All', 'Gaming', 'Music', 'Tech', 'Lifestyle']
@@ -8,6 +9,7 @@ const FanDashboard = () => {
 
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { addToast } = useToast();
 
   React.useEffect(() => {
     const fetchCreators = async () => {
@@ -34,6 +36,14 @@ const FanDashboard = () => {
             setCreators(fetchedCreators);
         } catch (error) {
             console.error("Error fetching creators:", error);
+            let msg = "Failed to load creators.";
+            if (error.message && (error.message.includes("Failed to load resource") || error.message.includes("BLOCKED"))) { // Client-side check
+                 msg = "AdBlocker detected! Please disable it for localhost to see data.";
+            } else if (error.message.includes("backend")) { // Sometimes reported as backend error
+                 msg = "Connection blocked. Check extensions.";
+            }
+            
+            addToast(msg, 'error');
         } finally {
             setLoading(false);
         }
@@ -54,9 +64,49 @@ const FanDashboard = () => {
   }, []);
 
   if (loading) return (
-    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="spinner"></div>
-    </div>
+    <DashboardLayout role="fan">
+        <div style={{ marginBottom: '2rem' }}>
+            <div className="skeleton" style={{ height: '40px', width: '300px', marginBottom: '1rem', borderRadius: '8px' }}></div>
+            <div className="skeleton" style={{ height: '20px', width: '200px', borderRadius: '4px' }}></div>
+        </div>
+        
+        {/* Search Skeleton */}
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+             <div className="skeleton" style={{ height: '50px', flex: 1, borderRadius: '12px' }}></div>
+             <div className="skeleton" style={{ height: '50px', width: '120px', borderRadius: '12px' }}></div>
+        </div>
+
+        {/* Categories Skeleton */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
+            {[1,2,3,4,5].map(i => (
+                <div key={i} className="skeleton" style={{ height: '36px', width: '80px', borderRadius: '99px' }}></div>
+            ))}
+        </div>
+
+        {/* Card Grid Skeleton */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            {[1,2,3,4].map(i => (
+                <div key={i} style={{ height: '300px', borderRadius: '16px', background: 'white', border: '1px solid #E2E8F0', padding: '1.5rem' }}>
+                    <div className="skeleton" style={{ width: 80, height: 80, borderRadius: '50%', margin: '0 auto 1rem' }}></div>
+                    <div className="skeleton" style={{ width: '60%', height: '24px', margin: '0 auto 0.5rem', borderRadius: '4px' }}></div>
+                    <div className="skeleton" style={{ width: '40%', height: '16px', margin: '0 auto 1.5rem', borderRadius: '4px' }}></div>
+                    <div className="skeleton" style={{ width: '100%', height: '42px', borderRadius: '10px' }}></div>
+                </div>
+            ))}
+        </div>
+        <style>{`
+            .skeleton {
+                background: #f1f5f9;
+                background-image: linear-gradient(90deg, #f1f5f9 0px, #e2e8f0 40px, #f1f5f9 80px);
+                background-size: 300px;
+                animation: skeleton-loading 1.5s infinite linear;
+            }
+            @keyframes skeleton-loading {
+                0% { background-position: -300px; }
+                100% { background-position: 300px; }
+            }
+        `}</style>
+    </DashboardLayout>
   );
 
   return (
@@ -115,7 +165,8 @@ const FanDashboard = () => {
 
         {/* Creators Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-            {filteredCreators.map(creator => (
+            {filteredCreators.length > 0 ? (
+                filteredCreators.map(creator => (
                 <div 
                     key={creator.id} 
                     className="creator-card"
@@ -165,7 +216,14 @@ const FanDashboard = () => {
                         <Gift size={18} /> Send Gift
                     </button>
                 </div>
-            ))}
+            ))
+            ) : (
+                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🥺</div>
+                    <h3>No creators found.</h3>
+                    <p>Try refreshing or allow connections to seeing creators.</p>
+                </div>
+            )}
         </div>
     </DashboardLayout>
   )

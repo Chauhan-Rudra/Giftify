@@ -34,9 +34,20 @@ const AdminDashboard = () => {
 
             setUsers(usersList);
             setLoading(false);
+            setUsers(usersList);
+            setLoading(false);
         } catch (err) {
             console.error("Fetch error:", err);
-            addToast("Could not load users. Please check your network.", 'error');
+            
+            let errorMessage = "Could not load users. Please check your network.";
+            
+            if (err.message && (err.message.includes("Failed to load resource") || err.message.includes("BLOCKED_BY_CLIENT"))) {
+                errorMessage = "Database connection blocked by an extension. Please disable AdBlockers for localhost.";
+            } else if (err.message === "Timeout") {
+                errorMessage = "Connection timed out. Database might be slow.";
+            }
+
+            addToast(errorMessage, 'error');
             setLoading(false);
         }
     };

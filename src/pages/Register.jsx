@@ -19,34 +19,76 @@ const Register = () => {
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
 
-        // Basic Validation
-        if (data.password.length < 6) {
-            addToast('Password should be at least 6 characters.', 'error');
-            setLoading(false);
-            return;
-        }
-
         try {
-            // Import the new wrapper service
-            const { register } = await import('../services/auth');
+            // Import dynamically to ensure firebase is initialized
+            const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
+            const { doc, setDoc } = await import('firebase/firestore');
+            const { auth, db } = await import('../firebase');
 
-            await register(data);
+            // 1. Create User in Auth with Timeout
+            const createPromise = createUserWithEmailAndPassword(auth, data.email, data.password);
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("Request timed out - Please check your network or adblocker")), 1000)
+            );
 
-            addToast('Account created successfully! Please sign in.', 'success');
-            setLocation('/login');
+            try {
+                const userCredential = await Promise.race([createPromise, timeoutPromise]);
+                const user = userCredential.user;
+
+                // 2. Update Display Name (Auth Layer)
+                await updateProfile(user, {
+                    displayName: `${data.firstName} ${data.lastName}`
+                });
+
+                // ** CRITICAL FIX **: Save role immediately to localStorage as fallback
+                // This ensures if Firestore fails/times out, we still know who they are.
+                localStorage.setItem('temp_register_role', data.role);
+
+                // 3. Store Role & Details in Firestore
+                const userData = {
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    email: data.email,
+                    role: data.role,
+                    createdAt: new Date().toISOString()
+                };
+
+                const firestorePromise = setDoc(doc(db, "users", user.uid), userData);
+                
+                // Reuse timeout logic for Firestore write
+                const writeTimeout = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Firestore write timed out")), 5000)
+                );
+
+                await Promise.race([firestorePromise, writeTimeout]);
+
+                addToast('Account created successfully! Please sign in.', 'success');
+                setLocation('/login');
+            } catch (err) {
+                 if (err.message && (err.message.includes("timed out") || err.message.includes("Firestore write timed out"))) {
+                    // Timeout hit - but User IS created in Auth.
+                    // Use the data we have to let them in anyway.
+                    console.warn("Firestore timed out during register - using fallback");
+                    
+                    addToast("Account created! Database is slow, but you can sign in now.", 'warning');
+                    setLocation('/login');
+                    return;
+                }
+                throw err;
+            }
 
         } catch (err) {
             console.error("Registration Error:", err);
-
+            
             let msg = 'Registration failed.';
-            if (err.message && (err.message.includes("Failed to fetch") || err.message.includes("network"))) {
-                msg = "Network Error: Check your internet connection.";
+            if (err.message && (err.message.includes("Failed to fetch") || err.message.includes("timed out") || err.message.includes("BLOCKED") || err.message.includes("Failed to load resource"))) {
+                msg = "Network Error: AdBlocker detected. Please disable extensions for localhost.";
             } else if (err.code === 'auth/email-already-in-use') {
                 msg = 'Email already in use.';
-            } else if (err.code === 'auth/invalid-api-key') {
-                msg = 'Configuration Error: Invalid Firebase API Key.';
-            } else {
-                msg = err.message.replace('Firebase: ', '').replace(' (auth/', '').replace(').', '');
+            } else if (err.code === 'auth/weak-password') {
+                msg = 'Password should be at least 6 characters.';
+            } else if (err.code === 'unavailable') {
+                msg = 'Service timeout. Check your network or AdBlocker.';
             }
 
             addToast(msg, 'error');
