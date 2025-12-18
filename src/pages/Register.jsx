@@ -28,7 +28,7 @@ const Register = () => {
             // 1. Create User in Auth with Timeout
             const createPromise = createUserWithEmailAndPassword(auth, data.email, data.password);
             const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error("Request timed out - Please check your network or adblocker")), 10000)
+                setTimeout(() => reject(new Error("Request timed out - Please check your network or adblocker")), 1000)
             );
 
             try {
@@ -49,15 +49,23 @@ const Register = () => {
                     createdAt: new Date().toISOString()
                 };
 
-                await setDoc(doc(db, "users", user.uid), userData);
+                // 3. Store Role & Details in Firestore (Might Fail - with timeout)
+                const firestorePromise = setDoc(doc(db, "users", user.uid), userData);
+                
+                // Reuse timeout logic for Firestore write
+                const writeTimeout = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Firestore write timed out")), 2000)
+                );
+
+                await Promise.race([firestorePromise, writeTimeout]);
 
                 addToast('Account created successfully! Please sign in.', 'success');
                 setLocation('/login');
             } catch (err) {
-                 if (err.message && err.message.includes("timed out")) {
+                 if (err.message && (err.message.includes("timed out") || err.message.includes("Firestore write timed out"))) {
                     // Timeout hit - but User might be created in Auth
                     console.warn("Firestore timed out during register");
-                    addToast("Account created, but database connection timed out. Please try logging in.", 'warning');
+                    addToast("Account created! Database is slow, but you can sign in now.", 'warning');
                     setLocation('/login');
                     return;
                 }

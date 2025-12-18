@@ -90,8 +90,8 @@ const DashboardLayout = ({ children, role = 'fan' }) => {
                     <div style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {user ? `${user.firstName} ${user.lastName}` : (role === 'creator' ? 'Alex Creator' : 'Sarah Fan')}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
-                         @{user ? user.firstName.toLowerCase() : (role === 'creator' ? 'alex' : 'sarah')}
+                    <div style={{ fontSize: '0.8rem', color: '#94A3B8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                         {user ? user.email : (role === 'creator' ? 'alex@example.com' : 'sarah@example.com')}
                     </div>
                 </div>
             </div>

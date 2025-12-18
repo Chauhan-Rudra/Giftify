@@ -34,7 +34,7 @@ const Login = () => {
             // Create a race between fetch and timeout
             const fetchPromise = getDoc(docRef);
             const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error("Request timed out - Please check your network or adblocker")), 10000)
+                setTimeout(() => reject(new Error("Request timed out - Please check your network or adblocker")), 1000)
             );
 
             try {
