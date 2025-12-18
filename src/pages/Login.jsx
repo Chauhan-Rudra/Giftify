@@ -37,28 +37,38 @@ const Login = () => {
                 setTimeout(() => reject(new Error("Request timed out - Please check your network or adblocker")), 10000)
             );
 
-            const docSnap = await Promise.race([fetchPromise, timeoutPromise]);
-
-            if (docSnap.exists()) {
-                const userData = docSnap.data();
+            try {
+                const docSnap = await Promise.race([fetchPromise, timeoutPromise]);
                 
-                // Save complete user info locally for dashboards
-                localStorage.setItem('user', JSON.stringify({ 
-                    uid: user.uid,
-                    ...userData 
-                }));
-
-                addToast(`Welcome back, ${userData.firstName}!`, 'success');
-
-                // Redirect based on role
-                if (userData.role === 'creator') {
-                    setLocation('/dashboard/creator');
-                } else {
-                    setLocation('/dashboard/fan');
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    localStorage.setItem('user', JSON.stringify({ uid: user.uid, ...userData }));
+                    addToast(`Welcome back, ${userData.firstName}!`, 'success');
+                    
+                    if (userData.role === 'creator') setLocation('/dashboard/creator');
+                    else setLocation('/dashboard/fan');
+                    return;
                 }
-            } else {
-                throw new Error("Profile not found in database.");
+            } catch (timeoutErr) {
+                // If auth worked but DB timed out, fallback to limited mode
+                console.warn("Firestore timed out, falling back to limited mode");
+                
+                const limitedUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    firstName: 'User',
+                    lastName: '',
+                    role: 'fan', // Default fallback
+                    isLimitedMode: true
+                };
+                
+                localStorage.setItem('user', JSON.stringify(limitedUser));
+                addToast("Network restrictions detected. Entering Limited Mode.", 'info');
+                setLocation('/dashboard/fan');
+                return;
             }
+
+            throw new Error("Profile not found in database.");
 
         } catch (err) {
             console.error("Login Error Details:", err);

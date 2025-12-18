@@ -31,27 +31,38 @@ const Register = () => {
                 setTimeout(() => reject(new Error("Request timed out - Please check your network or adblocker")), 10000)
             );
 
-            const userCredential = await Promise.race([createPromise, timeoutPromise]);
-            const user = userCredential.user;
+            try {
+                const userCredential = await Promise.race([createPromise, timeoutPromise]);
+                const user = userCredential.user;
 
-            // 2. Update Display Name
-            await updateProfile(user, {
-                displayName: `${data.firstName} ${data.lastName}`
-            });
+                // 2. Update Display Name (Auth Layer - usually works)
+                await updateProfile(user, {
+                    displayName: `${data.firstName} ${data.lastName}`
+                });
 
-            // 3. Store Role & Details in Firestore
-            const userData = {
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email,
-                role: data.role,
-                createdAt: new Date().toISOString()
-            };
+                // 3. Store Role & Details in Firestore (Might Fail)
+                const userData = {
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    email: data.email,
+                    role: data.role,
+                    createdAt: new Date().toISOString()
+                };
 
-            await setDoc(doc(db, "users", user.uid), userData);
+                await setDoc(doc(db, "users", user.uid), userData);
 
-            addToast('Account created successfully! Please sign in.', 'success');
-            setLocation('/login');
+                addToast('Account created successfully! Please sign in.', 'success');
+                setLocation('/login');
+            } catch (err) {
+                 if (err.message && err.message.includes("timed out")) {
+                    // Timeout hit - but User might be created in Auth
+                    console.warn("Firestore timed out during register");
+                    addToast("Account created, but database connection timed out. Please try logging in.", 'warning');
+                    setLocation('/login');
+                    return;
+                }
+                throw err;
+            }
 
         } catch (err) {
             console.error("Registration Error:", err);
